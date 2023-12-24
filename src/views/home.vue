@@ -15,6 +15,7 @@ const router = useRouter();
 const route = useRoute();
 
 //define state
+const keyword = ref("");
 const posts = ref([]);
 const errors = ref([]);
 
@@ -37,13 +38,29 @@ const fetchDataPosts = async () => {
         });
 }
 
+const search = async () => {
+        if(keyword.value == ''){
+            await api.get('/api/posts', withToken)
+            .then(response => {
+            posts.value = response.data.data;
+        }); 
+    }else{
+        await api.get(`/api/posts-search/${keyword.value}`, withToken)
+        .then(response => {
+            posts.value = response.data.data;
+        }); 
+    }
+}
+
 //run hook "onMounted"
 onMounted(() => {
     if (!token) {
         router.push({ path: "/login" });
     }
 
-    fetchDataPosts();
+    console.log('cek data keyword : ' + keyword.value);
+    // fetchDataPosts();
+    search();
 });
 
 const name = ref('no name');
@@ -84,10 +101,10 @@ const likeThisComment = async (id_comment, id_user) => {
     let formData = new FormData();
     formData.append("id_comment", id_comment);
     formData.append("id_user", id_user);
-    console.log('ini like this comment '+ id_comment + ' da ' + id_user)
-    
+    console.log('ini like this comment ' + id_comment + ' da ' + id_user)
+
     await api.post(`/api/comment-like`, formData, withToken)
-    .then(() => {
+        .then(() => {
             fetchDataPosts();
         })
         .catch((error) => {
@@ -115,6 +132,14 @@ const dislikeThisComment = async (id_comment, id_user) => {
         <div class="container-fluid py-5">
             <h1 class="display-5 fw-bold">Welcome to Vue-Blog</h1>
             <p class="col-md-8 fs-5">created by Muhammad Yudha </p>
+        </div>
+    </div> 
+
+    <!-- search -->
+    <div class="container mt-5 mb-5 text-center">
+        <div class="input-group mb-3 text-end" style="width: 18rem;">
+            <button disabled class="btn btn-danger" type="button" id="button-addon1">Search</button>
+            <input type="text" @keyup="search" v-model="keyword" class="form-control" placeholder="" aria-label="Example text with button addon" aria-describedby="button-addon1">
         </div>
     </div>
     
@@ -153,9 +178,9 @@ const dislikeThisComment = async (id_comment, id_user) => {
                                     <div class="card mb-2 bg-body-tertiary rounded-3">
                                         <div class="card-body mx-3">
                                             <small>{{ comment.message }}
-                                                    <br>
-                                                    <hr>
-                                                    <small style="color: grey">By. <i class="bi bi-person-fill"></i>  {{ comment.author }} |  <i class="bi bi-clock"></i>  {{ comment.date }}</small>
+                                                                    <br>
+                                                                    <hr>
+                                                                    <small style="color: grey">By. <i class="bi bi-person-fill"></i>  {{ comment.author }} |  <i class="bi bi-clock"></i>  {{ comment.date }}</small>
                                             </small>
                                         </div>
                                     </div>
@@ -170,16 +195,12 @@ const dislikeThisComment = async (id_comment, id_user) => {
                         </div>
                     </div>
     
-                        <div class="text-center me-2"> 
+                    <div class="text-center me-2">
                         <router-link :to="{ name: 'posts.comment', params:{id: post.id} }" class="btn btn-md btn-primary rounded-sm shadow border-0 me-0 mt-2"><i class="bi bi-pen"></i> Write Comment </router-link>
-
+    
                     </div>
                 </div>
             </div>
         </div>
-    
-    
-    
-    
     </div>
 </template>
